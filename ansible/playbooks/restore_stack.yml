@@ -1,0 +1,21 @@
+---
+# ==============================================================================
+# 🚑 Homelab Restore Playbook
+# ==============================================================================
+# Triggers the meticulous recovery process:
+# 1. Pull Latest Archive from Google Drive.
+# 2. Extract and Overwrite Configs.
+# 3. Restart Application Containers.
+# ==============================================================================
+
+- name: 🚀 Trigger Homelab Recovery
+  hosts: lxc_containers
+  become: yes
+  roles:
+    - role: backup_cloud
+      tags: [restore]
+  tasks:
+    - name: 🐳 Restart containers to apply restored config
+      shell: "docker restart $(docker ps -q)"
+      ignore_errors: yes
+      tags: [restore]

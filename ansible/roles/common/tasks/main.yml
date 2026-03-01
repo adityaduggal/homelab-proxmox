@@ -1,0 +1,67 @@
+---
+# ==============================================================================
+# 🛠️ Common LXC Configuration
+# ==============================================================================
+# This role runs on ALL containers first.
+# It ensures:
+# 1. Base packages (curl, git, unzip) are installed.
+# 2. Docker is installed and running.
+# 3. Timezone is correct (important for logs/scheduling).
+# 4. A standardized 'homelab' user exists.
+# ==============================================================================
+
+- name: 📦 Update APT cache and upgrade packages
+  apt:
+    update_cache: yes
+    upgrade: dist
+    cache_valid_time: 3600
+
+- name: 📦 Install essential dependencies
+  apt:
+    name:
+      - curl
+      - git
+      - unzip
+      - htop
+      - sudo
+      - python3-pip
+      - rclone # Pre-install rclone on all nodes for backup ease
+    state: present
+
+- name: 🕒 Set timezone to Host Timezone
+  timezone:
+    name: "Asia/Kolkata" # TODO: Parametrize this in all.yml if needed
+
+# --- Docker Installation (Official Script Method) ---
+- name: 🐳 Check if Docker is installed
+  command: docker --version
+  register: docker_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: 🐳 Install Docker via convenience script
+  shell: |
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sh get-docker.sh
+  when: docker_check.rc != 0
+
+- name: 🐳 Ensure Docker service is running
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+# --- User Management ---
+- name: 👤 Ensure 'homelab' user exists
+  user:
+    name: homelab
+    groups: docker,sudo
+    append: yes
+    shell: /bin/bash
+    generate_ssh_key: yes
+
+- name: 👤 Add 'homelab' to sudoers without password
+  lineinfile:
+    path: /etc/sudoers
+    line: 'homelab ALL=(ALL) NOPASSWD: ALL'
+    validate: 'visudo -cf %s'

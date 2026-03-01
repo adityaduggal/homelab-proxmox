@@ -1,0 +1,54 @@
+---
+# ==============================================================================
+# 🚀 Homelab Master Deployment Playbook
+# ==============================================================================
+# Triggers the full stack deployment in order:
+# 1. Standardize OS environment (common).
+# 2. Provision network (traefik).
+# 3. Provision storage/media (jellyfin).
+# 4. Provision automation hub (servarr).
+# 5. Provision download stack (deluge).
+# 6. Provision smart home (homeassistant).
+# ==============================================================================
+
+- name: 🛠️ Phase 1: Standardize all nodes
+  hosts: lxc_containers
+  roles:
+    - common
+
+- name: 🛠️ Phase 2: Deploy Network Gateway
+  hosts: network
+  roles:
+    - traefik
+
+- name: 🛠️ Phase 3: Deploy Media Streaming
+  hosts: media
+  roles:
+    - jellyfin
+
+- name: 🛠️ Phase 4: Deploy Servarr Logic
+  hosts: servarr
+  roles:
+    - servarr_base
+    - radarr
+    - sonarr
+    - prowlarr
+    - bazarr
+    - jellyseerr
+    - recyclarr
+
+- name: 🛠️ Phase 5: Deploy Downloads
+  hosts: downloads
+  roles:
+    - torrent_client
+
+- name: 🛠️ Phase 6: Deploy Smart Home
+  hosts: home
+  roles:
+    - homeassistant
+
+# Final Step: Setup automated backups on the Servarr node
+- name: 🛠️ Phase 7: Setup Backups
+  hosts: servarr
+  roles:
+    - backup_cloud

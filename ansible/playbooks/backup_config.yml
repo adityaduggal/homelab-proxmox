@@ -1,0 +1,15 @@
+---
+# ==============================================================================
+# ☁️ Homelab Backup Playbook
+# ==============================================================================
+# Triggers the meticulous backup process:
+# 1. Archive defined config files (per backup_rules.yml).
+# 2. Encrypt/Sync to Google Drive via Rclone.
+# ==============================================================================
+
+- name: 🚀 Trigger Homelab Backup
+  hosts: lxc_containers
+  become: yes
+  roles:
+    - role: backup_cloud
+      tags: [backup]

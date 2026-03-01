@@ -1,0 +1,64 @@
+---
+# ==============================================================================
+# ☁️ Backup & Cloud Recovery Role
+# ==============================================================================
+# This role handles the "One-Click" backup/restore logic.
+# It implements:
+# 1. Rclone configuration from .env tokens.
+# 2. Variable-driven Zipping of app configs (based on backup_rules.yml).
+# 3. Cloud synchronization to Google Drive.
+# ==============================================================================
+
+# --- Rclone Setup ---
+- name: 📁 Ensure Rclone config directory exists
+  file:
+    path: "~/.config/rclone"
+    state: directory
+
+- name: ⚙️ Configure Rclone (Google Drive)
+  template:
+    src: "rclone.conf.j2"
+    dest: "~/.config/rclone/rclone.conf"
+    mode: '0600'
+  vars:
+    gdrive_client_id: "{{ lookup('env', 'RCLONE_CONFIG_GDRIVE_CLIENT_ID') }}"
+    gdrive_client_secret: "{{ lookup('env', 'RCLONE_CONFIG_GDRIVE_CLIENT_SECRET') }}"
+    gdrive_token: "{{ lookup('env', 'RCLONE_CONFIG_GDRIVE_TOKEN') }}"
+
+# --- Backup Logic ---
+- name: 📦 Archive application configs for backup
+  community.general.archive:
+    path: "{{ item.value.base_path }}"
+    dest: "/tmp/{{ item.key }}_backup.zip"
+    format: zip
+    exclude_path: "{{ item.value.excludes | default([]) }}"
+  loop: "{{ backup_policies | dict2items }}"
+  register: archive_status
+  tags: [backup]
+
+- name: ☁️ Sync backups to Google Drive
+  command: "rclone copy /tmp/{{ item.key }}_backup.zip gdrive:homelab_backups/{{ item.key }}/"
+  loop: "{{ backup_policies | dict2items }}"
+  when: archive_status is succeeded
+  tags: [backup]
+
+# --- Recovery Logic ---
+- name: ☁️ Fetch latest backups from Google Drive (Recovery)
+  command: "rclone copy gdrive:homelab_backups/{{ item.key }}/{{ item.key }}_backup.zip /tmp/"
+  loop: "{{ backup_policies | dict2items }}"
+  tags: [restore]
+
+- name: 📦 Extract and Restore Configs
+  unarchive:
+    src: "/tmp/{{ item.key }}_backup.zip"
+    dest: "{{ item.value.base_path }}"
+    remote_src: yes
+  loop: "{{ backup_policies | dict2items }}"
+  tags: [restore]
+
+- name: 🧹 Cleanup temporary files
+  file:
+    path: "/tmp/{{ item.key }}_backup.zip"
+    state: absent
+  loop: "{{ backup_policies | dict2items }}"
+  tags: [backup, restore]

@@ -1,0 +1,40 @@
+---
+# ==============================================================================
+# 📥 Deluge Torrent Client Deployment
+# ==============================================================================
+
+- name: 📁 Create Deluge configuration and download paths
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: homelab
+    group: homelab
+  loop:
+    - "/etc/deluge"
+    - "{{ download_mount_path }}"
+
+- name: 🐳 Deploy Deluge Container
+  docker_container:
+    name: deluge
+    image: linuxserver/deluge:latest
+    restart_policy: unless-stopped
+    network_mode: bridge
+    env:
+      PUID: "1000"
+      PGID: "1000"
+      TZ: "Asia/Kolkata"
+      DELUGE_LOGLEVEL: "info"
+    volumes:
+      - "/etc/deluge:/config"
+      - "{{ download_mount_path }}:/downloads"
+    ports:
+      - "8112:8112" # WebUI
+      - "6881:6881" # Torrent Port (TCP)
+      - "6881:6881/udp" # Torrent Port (UDP)
+      - "58846:58846" # Daemon Port
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.deluge.rule: "Host(`deluge.{{ domain_name }}`) || Host(`torrent.{{ domain_name }}`)"
+      traefik.http.routers.deluge.entrypoints: "websecure"
+      traefik.http.routers.deluge.tls.certresolver: "letsencrypt"
+      traefik.http.services.deluge.loadbalancer.server.port: "8112"

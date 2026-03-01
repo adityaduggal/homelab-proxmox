@@ -1,0 +1,98 @@
+---
+# 🌐 Master Network & Hardware Map
+# domain: j1103.in
+# cidr: 10.3.0.0/16
+
+# --- Physical Infrastructure Specs ---
+host_node:
+  name: "j1103-pve"
+  ip: "{{ lookup('env', 'PROD_PVE_IP') | default('10.3.0.5', true) }}"
+  specs:
+    # ... (processor, ram_gb)
+    storage:
+      - type: "NVMe SSD"
+        size: "1TB"
+        usage: "OS & LXC Root"
+        mount_point: "/"
+        device: "/dev/nvme0n1"
+      - type: "HDD"
+        size: "8TB"
+        usage: "Media Data (ZFS)"
+        mount_point: "/mnt/media"
+        device: "{{ lookup('env', 'MEDIA_DISK_ID') | default('/dev/disk/by-id/ata-YOUR_8TB_DISK_SERIAL', true) }}"
+      - type: "HDD"
+        size: "4TB"
+        usage: "Backups"
+        mount_point: "/mnt/backups"
+        device: "{{ lookup('env', 'BACKUP_DISK_ID') | default('/dev/disk/by-id/ata-YOUR_4TB_DISK_SERIAL', true) }}"
+    os: "Proxmox VE 8.x"
+
+# --- Opnsense Gateway ---
+gateway:
+  ip: "{{ lookup('env', 'PROD_GATEWAY') | default('10.3.0.1', true) }}"
+  features: ["DHCP", "Wireguard"]
+
+# --- Domain & SSL ---
+domain_name: "{{ lookup('env', 'DOMAIN') | default('j1103.in', true) }}"
+acme_email: "{{ lookup('env', 'ACME_EMAIL') | default('admin@j1103.in', true) }}"
+letsencrypt_env: "{{ lookup('env', 'LETSENCRYPT_ENV') | default('staging', true) }}"
+
+# --- Dynamic IP Logic ---
+network_prefix: "{{ lookup('env', 'PROD_NETWORK_PREFIX') | default('10.3.1', true) }}"
+
+# --- Managed Services Map ---
+# 📝 How to Add a New LXC:
+# 1. Inventory: Add a new entry below with a unique ID, Name, and Role.
+#    - ID: Determines the static IP (10.3.1.ID).
+#    - Role: Must match a folder in 'ansible/roles/'.
+# 2. Provision: Run the Terraform/Bootstrap script to create the container.
+# 3. Configure: Define the role tasks and run the Ansible playbook.
+managed_lxcs:
+  - id: 101
+    name: "network-gateway"
+    role: "traefik"
+  - id: 102
+    name: "media-server"
+    role: "jellyfin"
+  - id: 103
+    name: "servarr-stack"
+    role: "automation"
+  - id: 104
+    name: "download-client"
+    role: "deluge"
+  - id: 105
+    name: "home-automation"
+    role: "homeassistant"
+
+# --- Home Device Inventory (Reference Only) ---
+home_devices:
+  security:
+    nvr:
+      ip: "10.3.10.10"
+      cameras: 11 # 10 + 1 NVR
+      static_method: "MAC Filtering"
+  entertainment:
+    tvs:
+      - name: "Living Room LG"
+        os: "WebOS"
+        ip: "10.3.20.1"
+      - name: "Bedroom LG"
+        os: "WebOS"
+        ip: "10.3.20.2"
+      - name: "Guest Room"
+        os: "Google TV"
+        ip: "10.3.20.3"
+    others: ["Projector", "Chromecast", "Amazon FireTV"]
+  computing:
+    personal:
+      laptops: 5
+      desktops: 2
+      ipads: 1
+      phones: "Multiple"
+    iot:
+      alexa: 2
+      smart_plugs: "Various"
+
+# --- TODO: Future Improvements ---
+# 1. HA integration for Opnsense AI monitoring.
+# 2. Automated MAC to Static IP binding script for NVR cameras.

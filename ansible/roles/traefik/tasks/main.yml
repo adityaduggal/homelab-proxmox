@@ -1,0 +1,50 @@
+---
+# ==============================================================================
+# 🚏 Traefik Deployment Task
+# ==============================================================================
+
+- name: 📁 Ensure Traefik config directories exist
+  file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - "/etc/traefik"
+    - "/etc/traefik/dynamic"
+
+- name: ☁️ Check for existing acme.json in Cloud (Restore for Persistence)
+  include_role:
+    name: backup_cloud
+    tasks_from: main
+  vars:
+    backup_policies:
+      traefik:
+        service_name: "traefik"
+        base_path: "/etc/traefik"
+  tags: [restore, ssl]
+
+- name: ⚙️ Deploy Traefik global config
+  template:
+    src: "traefik.yml.j2"
+    dest: "/etc/traefik/traefik.yml"
+  notify: 🐳 Restart Traefik
+
+- name: ⚙️ Deploy Dynamic Redirect config
+  template:
+    src: "dynamic_conf.yml.j2"
+    dest: "/etc/traefik/dynamic/redirects.yml"
+
+- name: 🐳 Deploy Traefik Container
+  docker_container:
+    name: traefik
+    image: traefik:v3.0
+    restart_policy: unless-stopped
+    network_mode: host
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "/etc/traefik/traefik.yml:/etc/traefik/traefik.yml:ro"
+      - "/etc/traefik/dynamic:/etc/traefik/dynamic:ro"
+      - "/etc/traefik/acme.json:/etc/traefik/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080" # Dashboard

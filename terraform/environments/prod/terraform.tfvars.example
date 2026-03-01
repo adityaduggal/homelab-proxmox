@@ -1,0 +1,27 @@
+# --- Connection Settings ---
+proxmox_host        = "10.3.0.5"
+pm_api_token_id     = "terraform-user@pve!prov-token"
+pm_api_token_secret = "your-api-token-secret"
+
+# --- Hardware Allocation ---
+target_node         = "j1103-pve"
+storage_id          = "local-lvm"  # or "NVMe"
+
+lxc_cpu_cores = {
+  network   = 1
+  media     = 4  # High for transcoding
+  servarr   = 2
+  downloads = 1
+  home      = 2
+}
+
+lxc_memory_mb = {
+  network   = 512
+  media     = 4096 # 4GB for Jellyfin
+  servarr   = 2048 # 2GB for combined stack
+  downloads = 1024
+  home      = 2048
+}
+
+gpu_passthrough_enabled = true
+network_gateway         = "10.3.0.1"

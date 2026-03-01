@@ -1,12 +1,9 @@
 {
-    "recommendations": [
-        "GitHub.remotehub",
-        "github.vscode-github-actions",
-        "ms-vscode-remote.remote-ssh",
-        "timonwong.shellcheck",
-        "DavidAnson.vscode-markdownlint",
-        "esbenp.prettier-vscode",
-        "redhat.vscode-yaml",
-        "EditorConfig.EditorConfig"
-    ]
+  "recommendations": [
+    "redhat.vscode-yaml",
+    "hashicorp.terraform",
+    "vscoss.vscode-ansible",
+    "davidanson.vscode-markdownlint",
+    "ms-python.python"
+  ]
 }

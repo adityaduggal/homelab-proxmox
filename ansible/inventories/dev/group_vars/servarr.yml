@@ -1,0 +1,47 @@
+---
+# ==============================================================================
+# 🧪 Dev Servarr Stack
+# ==============================================================================
+# Note: These apps will respond to the dev subdomains (e.g., radarr.dev.j1103.in)
+# Ensure your DNS/Hosts file points these to the Dev Traefik IP (10.3.99.101).
+# ==============================================================================
+
+servarr_apps:
+  - name: radarr
+    subdomain: radarr
+    alt_domain: movies
+    port: 7878
+  - name: sonarr
+    subdomain: sonarr
+    alt_domain: tv
+    port: 8989
+  - name: prowlarr
+    subdomain: prowlarr
+    alt_domain: index
+    port: 9696
+  - name: bazarr
+    subdomain: bazarr
+    alt_domain: subtitles
+    port: 6767
+  - name: jellyseerr
+    subdomain: jellyseerr
+    alt_domain: requests
+    port: 5055
+  - name: recyclarr
+    subdomain: recyclarr
+    alt_domain: sync
+    port: 443
+
+core_proxied_services:
+  - name: opnsense-firewall
+    subdomain: firewall
+    url: "https://10.3.0.1" # Still points to real firewall
+  - name: dev-proxmox
+    subdomain: proxmox
+    alt_domain: server
+    url: "https://10.3.0.11:8006" # Points to Dev PVE
+
+# --- Shared Directories (Mocked on Virtual Disk) ---
+base_config_dir: "/opt/servarr_configs"
+media_mount_path: "/mnt/media"
+download_mount_path: "/mnt/downloads"

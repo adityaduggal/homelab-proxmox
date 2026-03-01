@@ -1,12 +1,28 @@
-# Credentials and Environment
-variables.env
+# --- Security & Secrets ---
+.env
 *.env
-.ssh/
+.vault_pass
+**/ansible-vault-password
+rclone.conf
 
-# OS generated files
-.DS_Store
-Thumbs.db
+# --- Terraform ---
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+*.tfvars
+!terraform/environments/*/terraform.tfvars.example
 
-# Temporary files
+# --- Ansible ---
+*.retry
 *.log
-*.tmp
+inventory/prod/group_vars/vault.yml
+
+# --- OS & IDE ---
+.DS_Store
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+node_modules/
+dist/
+build/

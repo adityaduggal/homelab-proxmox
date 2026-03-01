@@ -1,0 +1,66 @@
+---
+# ==============================================================================
+# 📦 Servarr-Stack Configuration & Scaling Guide
+# ==============================================================================
+# HOW TO ADD A NEW APP:
+# 1. Add a new entry to the 'servarr_apps' list below.
+# 2. Traefik will automatically pick up the 'subdomain' for reverse proxying.
+# 3. Ensure the app has a corresponding Docker configuration in the 'servarr' role.
+# ==============================================================================
+
+servarr_apps:
+  - name: radarr
+    subdomain: radarr
+    alt_domain: movies
+    port: 7878
+  - name: sonarr
+    subdomain: sonarr
+    alt_domain: tv
+    port: 8989
+  - name: prowlarr
+    subdomain: prowlarr
+    alt_domain: index
+    port: 9696
+  - name: bazarr
+    subdomain: bazarr
+    alt_domain: subtitles
+    port: 6767
+  - name: jellyseerr
+    subdomain: jellyseerr
+    alt_domain: requests
+    port: 5055
+  - name: recyclarr
+    subdomain: recyclarr
+    alt_domain: sync
+    port: 443  # CLI-based but exposed for monitoring
+
+# --- Core Infrastructure Services (for Traefik) ---
+# These are not Servarr apps, but are defined here for Traefik to create routes.
+# The Traefik role should be configured to read this list and create appropriate
+# routers and services pointing to the specified URLs.
+core_proxied_services:
+  - name: opnsense-firewall
+    subdomain: firewall
+    url: "https://10.3.0.1"
+  - name: proxmox-ve
+    subdomain: proxmox
+    alt_domain: server
+    url: "https://10.3.0.5:8006"
+
+# --- Shared Directories ---
+# All apps in this LXC share these paths to minimize storage overhead.
+base_config_dir: "/opt/servarr_configs"
+media_mount_path: "/mnt/media"
+download_mount_path: "/mnt/downloads"
+
+# --- Scaling & Maintenance Notes ---
+# CPU Scaling: If this LXC becomes CPU bound, you can split this list and move
+# apps to a new LXC by simply updating the Ansible Inventory.
+#
+# Media Storage Scaling: The /mnt/media path is a ZFS pool on the Proxmox host.
+# To expand storage when it gets full:
+#   1. Install a new physical HDD in the host.
+#   2. Find its ID on the host: `ls -l /dev/disk/by-id/`
+#   3. Add the disk to the ZFS pool (e.g., a pool named 'media'):
+#      `zpool add media /dev/disk/by-id/your-new-disk-id`
+#   4. The capacity will increase automatically. No changes are needed in this LXC.

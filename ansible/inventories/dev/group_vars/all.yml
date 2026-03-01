@@ -1,0 +1,65 @@
+---
+# 🧪 Development Environment Configuration
+# ==============================================================================
+# Context: This environment runs on a Nested PVE VM inside the Prod Host.
+# Network: Uses 10.3.99.x to avoid conflicts with Prod (10.3.1.x).
+# ==============================================================================
+
+# --- Virtual Infrastructure Specs ---
+host_node:
+  name: "j1103-dev-pve"
+  ip: "{{ lookup('env', 'DEV_PVE_IP') | default('10.3.0.11', true) }}"
+  specs:
+    # Dev VM Resources (Allocated from Prod Host)
+    processor: "4 vCPU (Nested Virtualization)"
+    ram_gb: 16
+    # Storage Configuration (Virtual Disks):
+    # Since this is a VM, we use virtual disks (scsi0, scsi1) passed from the host.
+    storage:
+      - type: "Virtual Disk (OS)"
+        size: "32GB"
+        usage: "OS & LXC Root"
+        mount_point: "/"
+        device: "/dev/sda"
+      - type: "Virtual Disk (Data)"
+        size: "100GB"
+        usage: "Mock Media & Backups"
+        mount_point: "/mnt/media"
+        device: "/dev/sdb"
+    os: "Proxmox VE 8.x (Nested)"
+
+# --- Network Configuration ---
+gateway:
+  ip: "{{ lookup('env', 'DEV_GATEWAY') | default('10.3.0.1', true) }}"
+  features: ["DHCP"]
+
+# --- Domain & SSL ---
+domain_name: "dev.{{ lookup('env', 'DOMAIN') | default('j1103.in', true) }}"
+acme_email: "{{ lookup('env', 'ACME_EMAIL') | default('admin@j1103.in', true) }}"
+letsencrypt_env: "{{ lookup('env', 'LETSENCRYPT_ENV') | default('staging', true) }}"
+
+# --- Dynamic IP Logic ---
+# Logic: IP = 10.3.99.{LXC_ID} (Distinct from Prod)
+network_prefix: "{{ lookup('env', 'DEV_NETWORK_PREFIX') | default('10.3.99', true) }}"
+
+# --- Managed Services Map (Dev) ---
+# IDs match Prod for consistency, but IPs will differ based on prefix.
+managed_lxcs:
+  - id: 101
+    name: "dev-gateway"
+    role: "traefik"
+  - id: 102
+    name: "dev-media"
+    role: "jellyfin"
+  - id: 103
+    name: "dev-servarr"
+    role: "automation"
+  - id: 104
+    name: "dev-downloads"
+    role: "deluge"
+  - id: 105
+    name: "dev-home"
+    role: "homeassistant"
+
+# --- Mock Home Devices ---
+home_devices: {}

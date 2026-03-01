@@ -1,0 +1,67 @@
+---
+# ==============================================================================
+# 💾 Backup Rules & Policies
+# ==============================================================================
+# This file defines EXACTLY what gets backed up.
+# Strategy: Only backup configuration, databases, and XMLs.
+# Exclude: Heavy metadata, caches, logs, and temporary files.
+# ==============================================================================
+
+backup_global:
+  # Default retention days 10
+  retention_days: 10
+  dest_remote: "gdrive:homelab_backups"
+
+backup_policies:
+  # --- Network LXC ---
+  traefik:
+    service_name: "traefik"
+    base_path: "/etc/traefik"
+    # Backup the dynamic config and the ACME (SSL) json
+    includes:
+      - "traefik.yml"
+      - "dynamic/"
+      - "acme.json"
+    excludes:
+      - "*.log"
+      - "tmp/"
+
+  # --- Media LXC ---
+  jellyfin:
+    service_name: "jellyfin"
+    base_path: "/etc/jellyfin"
+    includes:
+      - "*.xml"
+      - "users.db"
+    # CRITICAL: Exclude massive metadata folders
+    excludes:
+      - "metadata/"
+      - "cache/"
+      - "transcodes/"
+      - "logs/"
+
+  # --- Servarr LXC (Consolidated) ---
+  servarr_stack:
+    service_name: "servarr"
+    base_path: "/opt/servarr_configs"
+    # Backup the config database and xml for all apps
+    includes:
+      - "**/config.xml"
+      - "**/*.db"
+    excludes:
+      - "**/logs/"
+      - "**/Backups/"  # Internal app backups (redundant)
+      - "**/update/"   # Update staging folders
+      - "**/MediaCover/" # Sonarr/Radarr posters
+
+  # --- Home Assistant LXC ---
+  homeassistant:
+    service_name: "hass"
+    base_path: "/config"
+    includes:
+      - "*.yaml"
+      - ".storage/"
+    excludes:
+      - "home-assistant_v2.db" # Often too large/corruptible during runtime. Backup config only.
+      - "tts/"
+      - "backups/" # Local .tar backups

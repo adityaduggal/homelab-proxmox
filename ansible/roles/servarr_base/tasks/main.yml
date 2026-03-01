@@ -1,0 +1,49 @@
+---
+# ==============================================================================
+# 📦 Consolidated Servarr Stack (Radarr, Sonarr, etc.)
+# ==============================================================================
+# This role prepares the shared environment for all Servarr-style apps.
+# It ensures:
+# 1. Shared config paths are created.
+# 2. Shared networks and UID/GID permissions are standardized.
+# 3. Docker-Compose is used for orchestration.
+# ==============================================================================
+
+- name: 📁 Ensure base configuration directories exist
+  file:
+    path: "{{ base_config_dir }}/{{ item.name }}"
+    state: directory
+    owner: homelab
+    group: homelab
+  loop: "{{ servarr_apps }}"
+
+- name: 📁 Ensure media and download mounts exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: homelab
+    group: homelab
+  loop:
+    - "{{ media_mount_path }}"
+    - "{{ download_mount_path }}"
+
+- name: 🐳 Deploy Consolidated Servarr Stack (Radarr/Sonarr)
+  docker_container:
+    name: "{{ item.name }}"
+    image: "linuxserver/{{ item.name }}:latest"
+    restart_policy: unless-stopped
+    env:
+      PUID: "1000"
+      PGID: "1000"
+      TZ: "Asia/Kolkata"
+    volumes:
+      - "{{ base_config_dir }}/{{ item.name }}:/config"
+      - "{{ media_mount_path }}:/media"
+      - "{{ download_mount_path }}:/downloads"
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.{{ item.name }}.rule: "Host(`{{ item.subdomain }}.{{ domain_name }}`) || Host(`{{ item.alt_domain }}.{{ domain_name }}`)"
+      traefik.http.routers.{{ item.name }}.entrypoints: "websecure"
+      traefik.http.routers.{{ item.name }}.tls.certresolver: "letsencrypt"
+      traefik.http.services.{{ item.name }}.loadbalancer.server.port: "{{ item.port }}"
+  loop: "{{ servarr_apps }}"

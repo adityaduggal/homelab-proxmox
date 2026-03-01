@@ -1,0 +1,35 @@
+---
+# ==============================================================================
+# 🏠 Home Assistant Deployment
+# ==============================================================================
+# Note: Host networking is required for local device discovery (mDNS/UPnP).
+# HACS & Opnsense integration are managed within the HASS UI after deployment.
+# ==============================================================================
+
+- name: 📁 Create Home Assistant config directory
+  file:
+    path: "/config"
+    state: directory
+    owner: homelab
+    group: homelab
+
+- name: 🐳 Deploy Home Assistant Container
+  docker_container:
+    name: homeassistant
+    image: ghcr.io/home-assistant/home-assistant:stable
+    restart_policy: unless-stopped
+    network_mode: host
+    volumes:
+      - "/config:/config"
+      - "/etc/localtime:/etc/localtime:ro"
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.hass.rule: "Host(`home.{{ domain_name }}`) || Host(`homeassistant.{{ domain_name }}`)"
+      traefik.http.routers.hass.entrypoints: "websecure"
+      traefik.http.routers.hass.tls.certresolver: "letsencrypt"
+      # Home Assistant usually listens on 8123
+      traefik.http.services.hass.loadbalancer.server.port: "8123"
+
+- name: 💡 Post-Install Note
+  debug:
+    msg: "Home Assistant is running. To control Opnsense, install HACS and the Opnsense integration from the UI."

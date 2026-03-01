@@ -1,0 +1,28 @@
+# ==============================================================================
+# 🔀 Traefik Dynamic Configuration & Shortname Redirects
+# ==============================================================================
+
+http:
+  routers:
+    # 🏁 Shortname Redirect Logic (e.g., http://jellyfin/ -> https://jellyfin.j1103.in)
+    shortname-redirect:
+      rule: "HostRegexp(`{subdomain:[a-z]+}`)"
+      entryPoints: ["web", "websecure"]
+      middlewares: ["shortname-regex-replace"]
+      service: "noop"
+
+  middlewares:
+    # 🔗 Regex Redirect Middleware
+    # Matches 'subdomain' and replaces it with 'subdomain.j1103.in'
+    shortname-regex-replace:
+      redirectRegex:
+        regex: "^https?://([a-z0-9-]+)/?$"
+        replacement: "https://${1}.{{ domain_name }}/"
+        permanent: true
+
+  services:
+    # 💤 No-op service (required by routers that just redirect)
+    noop:
+      loadBalancer:
+        servers:
+          - url: "http://localhost"
