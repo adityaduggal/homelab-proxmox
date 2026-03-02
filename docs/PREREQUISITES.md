@@ -2,6 +2,20 @@
 
 Follow these steps meticulously before running the bootstrap script.
 
+## 0. Install Local Tools (Terraform, Ansible, Rclone)
+Before anything else, ensure you have the required tools installed on your development machine or the control node (e.g., the Dev Host).
+
+**Automatic Install (Debian/Ubuntu/Proxmox):**
+```bash
+chmod +x scripts/*.sh
+./scripts/setup_dev_env.sh
+```
+
+**Manual Install:**
+- [Terraform Installation Guide](https://developer.hashicorp.com/terraform/downloads)
+- [Ansible Installation Guide](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)
+- [Rclone Installation Guide](https://rclone.org/install/)
+
 ## 1. Proxmox VE Installation
 1.  Download Proxmox VE ISO from the [official site](https://www.proxmox.com/en/downloads).
 2.  Flash to a USB using Etcher/Rufus.

@@ -21,6 +21,12 @@ To balance isolation and resource usage, services are consolidated into 5 functi
 - API Token created for Terraform.
 - `ansible-vault` password ready for secrets.
 
+**If you are setting up from a fresh machine (Ubuntu/Proxmox/Debian):**
+```bash
+chmod +x scripts/*.sh
+./scripts/setup_dev_env.sh
+```
+
 ### 2. Setup Configuration
 ```bash
 cp .env.example .env

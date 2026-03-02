@@ -13,6 +13,14 @@ This environment allows you to test infrastructure changes on a Nested Proxmox V
     - **Network:** Bridge to main network.
     - **Static IP:** `10.3.0.11`
 
+2. Install local tools on the Dev Host (if you intend to run the bootstrap from there):
+    ```bash
+    git clone https://github.com/yourusername/homelab-proxmox.git
+    cd homelab-proxmox
+    chmod +x scripts/*.sh
+    ./scripts/setup_dev_env.sh
+    ```
+
 ## 2. Running Ansible in Dev
 
 Use the `-i` flag to point to the dev inventory.

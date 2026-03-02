@@ -18,6 +18,7 @@ set -e
 check_tool() {
     if ! command -v "$1" &> /dev/null; then
         echo "❌ Error: '$1' is not installed."
+        echo "💡 Tip: Run './scripts/setup_dev_env.sh' to install all required tools (Debian/Ubuntu/Proxmox)."
         exit 1
     fi
     echo "✅ Tool '$1' is available."

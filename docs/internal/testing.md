@@ -6,7 +6,14 @@ This document outlines the internal testing protocols for the `homelab-proxmox` 
 
 The Dev environment is a **Nested Proxmox** instance or a dedicated physical node (IP: `10.3.0.11`) used to mirror the production topology.
 
-### 0. Defining Variables for Testing
+### 0. Setting up the Control Node (Dev Host)
+If you intend to run Terraform and Ansible from the Dev Host itself, you must first install the required tools:
+```bash
+chmod +x scripts/*.sh
+./scripts/setup_dev_env.sh
+```
+
+### 1. Defining Variables for Testing
 All environment-specific variables are defined in the following locations:
 1.  **Global Secrets:** `.env` (Copy from `.env.example`).
 2.  **Dev-Specific Overrides:** `ansible/inventories/dev/group_vars/all.yml`.
